@@ -1,0 +1,1 @@
+"""MedLexica FastAPI serving layer."""

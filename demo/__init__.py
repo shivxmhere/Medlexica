@@ -1,0 +1,1 @@
+"""MedLexica Gradio demo interface."""

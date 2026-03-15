@@ -1,0 +1,1 @@
+"""MedLexica test suite."""

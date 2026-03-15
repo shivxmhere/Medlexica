@@ -4,6 +4,7 @@
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.3-EE4C2C.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![W&B](https://img.shields.io/badge/Weights_&_Biases-FFBE00?logo=weightsandbiases&logoColor=white)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shivxmhere/Medlexica/blob/main/notebooks/MedLexica_Training_Colab.ipynb)
 
 ## Overview
 MedLexica is a production-grade clinical AI system. It utilizes semantic vector search, knowledge graphs, and cross-encoder re-ranking in a hybrid RAG pipeline. Powered by a QLoRA fine-tuned Phi-3 model, it serves highly accurate, locally hosted inference with citation capabilities and hallucination guardrails via FastAPI.
@@ -58,6 +59,10 @@ Hallucination score · citation · JSON
    ```bash
    uvicorn api.main:app --reload
    ```
+
+## Run Training on Colab
+> Click the badge above to open the training notebook directly in Google Colab. No local GPU required.
+> Estimated training time: 3-4 hours on free T4 GPU.
 
 ## Results
 

@@ -1,0 +1,1 @@
+"""MedLexica hybrid RAG pipeline."""
