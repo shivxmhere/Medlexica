@@ -69,6 +69,11 @@ Hallucination score · citation · JSON
 | ICD-10 Accuracy | TBD | TBD | TBD |
 | P95 Latency (ms) | TBD | TBD | TBD |
 
+> Results will be populated after training run completes.
+> Live W&B dashboard: [link]
+> All evaluation code is in eval/run_eval.py — 
+> fully reproducible in one command: make eval
+
 ## Technical Deep-Dive
 - **QLoRA Fine-Tuning:** The Phi-3-mini-4k model is fine-tuned using Quantized Low-Rank Adaptation (QLoRA) utilizing 4-bit quantization, balancing performance with resource efficiency.
 - **Hybrid RAG Pipeline:** Combines dense FAISS retrievers and sparse BM25 indices to fetch the most relevant knowledge alongside structured databases and ICD-10 ontology.
