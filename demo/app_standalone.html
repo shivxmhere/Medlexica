@@ -2,281 +2,368 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MedLexica Clinical AI</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MedLexica — Clinical AI Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root { --bg-base: #0a0f1e; --acc-cyan: #00d4ff; --acc-green: #00ff88; --acc-amber: #ffb700; --text-main: #e8f4ff; --text-muted: #8b9bb4; --bg-card: rgba(16, 24, 43, 0.7); --border-main: rgba(0, 212, 255, 0.2); }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', sans-serif; background-color: var(--bg-base); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 60px 60px; animation: slowPan 60s linear infinite; }
-  @keyframes slowPan { 0% { background-position: 0 0; } 100% { background-position: 60px 60px; } }
-  h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
-  .mono { font-family: 'JetBrains Mono', monospace; }
-  .layout { display: flex; width: 100%; height: 100%; }
-
-  /* Left Sidebar */
-  .sidebar-left { width: 260px; min-width: 260px; border-right: 1px solid var(--border-main); display: flex; flex-direction: column; padding: 20px; background: rgba(10, 15, 30, 0.85); z-index: 10; }
-  .logo-area { margin-bottom: 30px; position: relative; }
-  .logo-text { font-size: 24px; font-weight: 700; color: var(--acc-cyan); margin-bottom: 4px; }
-  .vitals-panel { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
-  .vital-card { background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-  .vital-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;}
-  .vital-val { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 600; }
-  .vital-val.green { color: var(--acc-green); }
-  .vital-val.cyan { color: var(--acc-cyan); }
-  .vital-val.amber { color: var(--acc-amber); }
-  .pipeline { margin-bottom: auto; }
-  .pipe-title { font-size: 14px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 15px; letter-spacing: 1px; }
-  .pipe-step { display: flex; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--text-muted); transition: color 0.3s; }
-  .pipe-step.active { color: var(--text-main); }
-  .pipe-icon { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #333; margin-right: 12px; position: relative; flex-shrink: 0;}
-  .pipe-step.active .pipe-icon { border-color: transparent; border-top-color: var(--acc-cyan); border-right-color: var(--acc-cyan); animation: spin 1s linear infinite; box-shadow: 0 0 10px rgba(0, 212, 255, 0.5); }
-  .pipe-step.done .pipe-icon { border-color: var(--acc-green); background-color: rgba(0, 255, 136, 0.2); }
-  .pipe-step.done .pipe-icon::after { content: ''; position: absolute; left: 4px; top: 1px; width: 3px; height: 7px; border: solid var(--acc-green); border-width: 0 2px 2px 0; transform: rotate(45deg); }
-  @keyframes spin { 100% { transform: rotate(360deg); } }
-  .model-card { background: var(--bg-card); padding: 12px; border-radius: 8px; font-size: 11px; color: var(--text-muted); border: 1px solid var(--border-main); line-height: 1.5; }
-
-  /* Center */
-  .center-panel { flex: 1; padding: 30px 40px; display: flex; flex-direction: column; position: relative; overflow-y: auto; overflow-x: hidden; }
-  .progress-bar-container { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.05); }
-  .progress-bar { height: 100%; width: 0%; background: var(--acc-cyan); transition: width 0.3s; box-shadow: 0 0 10px var(--acc-cyan); }
-  .api-status-banner { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; background: var(--bg-card); padding: 12px 20px; border-radius: 8px; border: 1px solid var(--border-main); }
-  .status-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
-  .status-dot.live { background: var(--acc-green); color: var(--acc-green); animation: pulse 2s infinite; }
-  .status-dot.demo { background: var(--acc-amber); color: var(--acc-amber); }
-  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); } }
-  .query-box { position: relative; margin-bottom: 20px; }
-  .query-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-main); color: var(--text-main); padding: 20px; border-radius: 12px; font-size: 16px; font-family: 'Space Grotesk', sans-serif; resize: none; outline: none; transition: all 0.3s; height: 120px; }
-  .query-input:focus { border-color: var(--acc-cyan); box-shadow: 0 0 20px rgba(0, 212, 255, 0.15); }
-  .example-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
-  .pill { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; color: var(--text-muted); }
-  .pill:hover { border-color: var(--acc-cyan); color: var(--text-main); }
-  .submit-btn { align-self: flex-start; padding: 12px 30px; background: linear-gradient(90deg, #00d4ff, #0077ff); color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; cursor: pointer; position: relative; overflow: hidden; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; min-width: 200px; height: 44px; }
-  .submit-btn:active { transform: scale(0.98); }
-  .submit-btn.loading { color: transparent; pointer-events: none; }
-  .submit-btn.loading::after { content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  .ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.4); transform: scale(0); animation: rippleEffect 0.6s linear; pointer-events: none; }
-  @keyframes rippleEffect { to { transform: scale(4); opacity: 0; } }
-  .response-card { background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 12px; padding: 25px; margin-top: 30px; min-height: 200px; display: none; flex-direction: column; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-  .response-card.visible { display: flex; }
-  .response-text { font-size: 15px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 25px; flex: 1; }
-  .cursor { display: inline-block; width: 8px; height: 15px; background: var(--acc-cyan); animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 2px;}
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-  .icd-pill { background: rgba(0, 212, 255, 0.15); border: 1px solid var(--acc-cyan); color: var(--acc-cyan); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 600; margin: 0 4px; font-family: 'JetBrains Mono', monospace; box-shadow: 0 0 5px rgba(0,212,255,0.2);}
-  .drug-name { font-weight: 700; color: #fff; text-shadow: 0 0 2px rgba(255,255,255,0.5); }
-  .response-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; font-size: 12px; flex-wrap: wrap; gap: 10px; }
-  .hal-ind { display: flex; align-items: center; gap: 8px; }
-  .arc-wrapper { position: relative; width: 20px; height: 10px; overflow: hidden; }
-  .arc { position: absolute; top: 0; left: 0; width: 20px; height: 20px; border-radius: 50%; border: 3px solid; border-bottom-color: transparent!important; border-left-color: transparent!important; transform: rotate(-45deg); }
-  .arc.safe { border-color: var(--acc-green); }
-  .arc.warn { border-color: var(--acc-amber); }
-  .arc.danger { border-color: #ff3366; }
-  .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono'; }
-  .danger-banner { color: #ff3366; font-weight: bold; width: 100%; border-top: 1px solid rgba(255,51,102,0.2); padding-top: 10px; margin-top: 10px; display: none; }
-  .scorecard { margin-top: 40px; background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border-main); }
-  .score-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; margin-top: 20px; font-size: 13px; }
-  .score-header { color: var(--text-muted); font-size: 12px; text-transform: uppercase; }
-  .score-row { display: contents; }
-  .score-row > div { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; }
-  .score-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; position: relative; margin-top: 5px; overflow: hidden; }
-  .score-bar-fill { height: 100%; background: var(--acc-cyan); width: 0%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
-  .delta-pos { color: var(--acc-green); font-family: 'JetBrains Mono'; }
-  .delta-neg { color: var(--acc-cyan); font-family: 'JetBrains Mono'; }
-
-  /* Right Sidebar */
-  .sidebar-right { width: 280px; min-width: 280px; border-left: 1px solid var(--border-main); display: flex; flex-direction: column; padding: 20px; background: rgba(10, 15, 30, 0.85); z-index: 10; }
-  .section-title { font-size: 14px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 15px; letter-spacing: 1px; }
-  .sources-container { display: flex; flex-direction: column; gap: 12px; flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px;}
-  .source-card { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; transform: translateX(20px); opacity: 0; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-  .source-card.show { transform: translateX(0); opacity: 1; }
-  .source-card:hover { transform: translateY(-4px) !important; border-color: var(--acc-cyan); box-shadow: 0 4px 15px rgba(0,212,255,0.1); }
-  .src-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 11px; }
-  .src-name { font-family: 'JetBrains Mono'; color: var(--acc-cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px;}
-  .src-score { display: flex; align-items: center; gap: 5px; }
-  .src-bar { width: 30px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
-  .src-fill { height: 100%; background: var(--acc-cyan); border-radius: 2px; }
-  .src-text { font-size: 12px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .training-metrics { margin-top: 30px; border-top: 1px solid var(--border-main); padding-top: 20px; }
-  .loss-chart { width: 100%; height: 80px; background: var(--bg-card); border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
-  .metric-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; color: var(--text-muted); }
-  .metric-val { color: var(--text-main); font-family: 'JetBrains Mono'; }
-  .wandb-link { display: inline-flex; margin-top: 10px; font-size: 12px; color: var(--acc-amber); text-decoration: none; align-items: center; gap: 5px;}
-  .wandb-link:hover { text-decoration: underline; }
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#060d1a;--surface:#0c1528;--surface2:#111f38;--surface3:#162444;
+--border:rgba(0,212,255,0.1);--border2:rgba(0,212,255,0.25);
+--cyan:#00d4ff;--green:#00ff88;--amber:#ffb700;--red:#ff4444;
+--text:#e8f4ff;--text2:#8ba8c8;--text3:#4a6a8a;
+--mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden}
+/* HEADER */
+.header{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;z-index:10}
+.header-left{display:flex;flex-direction:column;gap:2px}
+.logo{font:600 24px var(--sans);color:var(--cyan);letter-spacing:-0.5px}
+.ecg-line svg{height:18px;width:120px;filter:drop-shadow(0 0 4px #00ff88)}
+.ecg-path{stroke:#00ff88;stroke-width:1.5;fill:none;stroke-dasharray:200;stroke-dashoffset:200;animation:drawEcg 2s linear infinite}
+@keyframes drawEcg{to{stroke-dashoffset:0}}
+.header-center{text-align:center}
+.header-center div{font:11px var(--mono);color:var(--text3)}
+.header-center div:last-child{font-size:10px;margin-top:2px}
+.header-right{display:flex;align-items:center;gap:14px}
+.status-dot{width:8px;height:8px;background:var(--amber);border-radius:50%;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
+.demo-label{font:500 11px var(--mono);color:var(--amber)}
+.model-pill{font:11px var(--mono);color:var(--cyan);border:1px solid rgba(0,212,255,0.3);padding:3px 10px;border-radius:12px}
+.header-link{color:var(--text3);text-decoration:none;font:11px var(--mono);transition:color .2s}
+.header-link:hover{color:var(--cyan)}
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 60px)}
+.col-left{width:280px;min-width:280px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:16px}
+.col-center{flex:1;overflow-y:auto;padding:20px 24px}
+.col-right{width:300px;min-width:300px;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;padding:16px}
+.col-left::-webkit-scrollbar,.col-center::-webkit-scrollbar,.col-right::-webkit-scrollbar{width:4px}
+.col-left::-webkit-scrollbar-thumb,.col-center::-webkit-scrollbar-thumb,.col-right::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
+/* VITALS */
+.section-title{font:500 11px var(--mono);color:var(--text3);letter-spacing:1.5px;margin-bottom:12px;text-transform:uppercase}
+.vital-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.vital-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.vital-label{font:500 10px var(--mono);color:var(--text3);letter-spacing:1px}
+.vital-value{font:600 24px var(--sans)}
+.vital-canvas{width:100%;height:50px;display:block}
+/* PIPELINE */
+.pipeline-step{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.step-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--text3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s}
+.step-dot.running{border:2px solid var(--cyan);border-right-color:transparent;animation:spin .8s linear infinite}
+.step-dot.done{border-color:var(--green);background:var(--green)}
+.step-dot.done::after{content:'✓';color:#000;font-size:11px;font-weight:700}
+@keyframes spin{to{transform:rotate(360deg)}}
+.step-name{font:13px var(--sans);color:var(--text);flex:1}
+.step-detail{font:10px var(--mono);color:var(--text3);white-space:nowrap}
+/* MODEL INFO */
+.info-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);font:12px var(--mono)}
+.info-row span:first-child{color:var(--text3)}
+.info-row span:last-child{color:var(--text)}
+/* CENTER */
+.api-bar{background:rgba(255,183,0,0.08);border:1px solid rgba(255,183,0,0.3);border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.api-bar .status-dot{width:6px;height:6px}
+.api-bar span{font:12px var(--mono);color:var(--amber)}
+.query-label{font:11px var(--mono);color:var(--text3);letter-spacing:1px;margin-bottom:8px}
+textarea{width:100%;min-height:120px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font:14px var(--sans);padding:14px;resize:vertical;outline:none;transition:border .3s,box-shadow .3s}
+textarea:focus{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,212,255,0.1)}
+textarea::placeholder{color:var(--text3)}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.pill{font:12px var(--mono);color:var(--cyan);border:1px solid rgba(0,212,255,0.25);padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .2s;background:transparent}
+.pill:hover{background:rgba(0,212,255,0.1);transform:translateY(-1px)}
+.submit-btn{width:100%;height:48px;border:none;border-radius:10px;background:linear-gradient(135deg,#0066cc,#00d4ff);color:#fff;font:600 14px var(--sans);cursor:pointer;position:relative;overflow:hidden;transition:transform .1s}
+.submit-btn:hover{transform:translateY(-1px)}
+.submit-btn:active{transform:translateY(0)}
+.submit-btn.loading{pointer-events:none;opacity:.8}
+.submit-btn .spinner{display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:8px}
+.submit-btn.loading .spinner{display:inline-block}
+.progress-bar{width:100%;height:3px;background:var(--surface2);border-radius:2px;margin-top:12px;overflow:hidden;opacity:0;transition:opacity .3s}
+.progress-bar.active{opacity:1}
+.progress-fill{height:100%;width:0%;background:var(--cyan);border-radius:2px;box-shadow:0 0 10px var(--cyan);transition:width 3s linear}
+/* RESPONSE */
+.response-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:20px;min-height:200px}
+.response-empty{color:var(--text3);font:13px var(--mono);text-align:center;padding:60px 20px}
+.response-text{font:14px/1.7 'Inter',sans-serif;color:var(--text);white-space:pre-wrap}
+.response-text .icd{display:inline;background:rgba(0,212,255,0.12);color:var(--cyan);padding:1px 6px;border-radius:4px;font-family:var(--mono);font-size:12px}
+.cursor-blink{display:inline-block;width:2px;height:16px;background:var(--cyan);animation:blink .6s step-end infinite;vertical-align:text-bottom;margin-left:2px}
+@keyframes blink{50%{opacity:0}}
+.metrics-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.metric-chip{font:11px var(--mono);color:var(--text2);background:var(--surface2);padding:4px 10px;border-radius:6px}
+.hall-indicator{display:flex;align-items:center;gap:8px}
+.hall-arc{width:36px;height:36px;position:relative}
+.hall-arc canvas{width:36px;height:36px}
+.hall-label{font:600 12px var(--mono)}
+.disclaimer{font:11px var(--mono);color:var(--text3);margin-top:14px;padding:10px;background:rgba(255,68,68,0.05);border:1px solid rgba(255,68,68,0.15);border-radius:8px}
+/* SCORECARD */
+.scorecard{margin-top:24px}
+.score-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.score-name{width:120px;font:12px var(--mono);color:var(--text2)}
+.score-base{width:55px;font:11px var(--mono);color:var(--text3);text-align:right}
+.score-bar-wrap{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.score-bar{height:100%;background:linear-gradient(90deg,#0066cc,var(--cyan));border-radius:3px;width:0%;transition:width 1.2s cubic-bezier(0.22,1,0.36,1)}
+.score-val{width:55px;font:600 12px var(--mono);color:var(--cyan);text-align:right}
+.score-delta{width:65px;font:600 11px var(--mono);color:var(--green);text-align:right}
+/* RIGHT COL */
+.sources-empty{font:12px var(--mono);color:var(--text3);padding:20px 0}
+.source-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;transform:translateX(30px);opacity:0;transition:all .4s cubic-bezier(0.22,1,0.36,1);cursor:default}
+.source-card.visible{transform:translateX(0);opacity:1}
+.source-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:0 4px 20px rgba(0,212,255,0.08)}
+.source-top{display:flex;justify-content:space-between;margin-bottom:6px}
+.source-file{font:12px var(--mono);color:var(--cyan)}
+.source-score{font:11px var(--mono);color:var(--text3)}
+.source-bar{height:3px;background:var(--surface3);border-radius:2px;margin-bottom:8px;overflow:hidden}
+.source-bar-fill{height:100%;background:var(--cyan);border-radius:2px;width:0%;transition:width .8s ease-out}
+.source-preview{font:12px/1.5 'Inter',sans-serif;color:var(--text3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* TRAINING */
+.loss-chart{width:100%;height:140px;background:var(--surface2);border-radius:10px;margin-bottom:14px}
+.train-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03);font:12px var(--mono)}
+.train-row span:first-child{color:var(--text3)}
+.train-row span:last-child{color:var(--text)}
+.wandb-btn{width:100%;padding:10px;margin-top:12px;border:1px solid rgba(255,183,0,0.3);background:rgba(255,183,0,0.08);color:var(--amber);font:12px var(--mono);border-radius:8px;cursor:pointer;text-align:center;transition:background .2s}
+.wandb-btn:hover{background:rgba(255,183,0,0.15)}
+.badge{font:10px var(--mono);color:var(--text3);background:var(--surface2);padding:2px 8px;border-radius:4px;margin-left:8px}
 </style>
 </head>
 <body>
+<!-- HEADER -->
+<div class="header">
+<div class="header-left">
+<div class="logo">MedLexica</div>
+<div class="ecg-line"><svg viewBox="0 0 120 30"><polyline class="ecg-path" points="0,15 20,15 28,15 32,8 36,15 40,2 44,28 48,15 56,15 64,10 72,15 80,15 120,15"/></svg></div>
+</div>
+<div class="header-center">
+<div>CLINICAL AI ASSISTANT</div>
+<div>INDIAN HEALTHCARE · SRMIST 2026</div>
+</div>
+<div class="header-right">
+<div class="status-dot"></div>
+<span class="demo-label">DEMO MODE</span>
+<span class="model-pill">medlexica-v1</span>
+<a class="header-link" href="https://github.com/shivxmhere/Medlexica" target="_blank">GitHub</a>
+<a class="header-link" href="https://wandb.ai/shivuladuushivam-/medlexica-hackathon" target="_blank">W&B</a>
+</div>
+</div>
+<!-- LAYOUT -->
 <div class="layout">
-  <div class="sidebar-left">
-    <div class="logo-area">
-      <div class="logo-text">MedLexica</div>
-      <svg id="logo-ecg" width="220" height="20" viewBox="0 0 220 20"><path d="M0,10 L50,10 L55,0 L60,20 L65,10 L220,10" fill="none" stroke="rgba(0, 212, 255, 0.4)" stroke-width="2" /><circle id="logo-pulse" cx="0" cy="10" r="3" fill="#00d4ff" /></svg>
-    </div>
-    <div class="vitals-panel">
-      <div class="vital-card"><div class="vital-header"><span>Heart Rate</span><span class="vital-val green">72 BPM</span></div><svg id="ecg-wave" width="210" height="40" style="filter: drop-shadow(0 0 4px #00ff88);"></svg></div>
-      <div class="vital-card"><div class="vital-header"><span>SpO2</span><span class="vital-val cyan">98%</span></div><svg id="spo2-wave" width="210" height="40" style="filter: drop-shadow(0 0 4px #00d4ff);"></svg></div>
-      <div class="vital-card"><div class="vital-header"><span>Blood Pressure</span><span class="vital-val amber">120/80</span></div><svg id="bp-wave" width="210" height="40" style="filter: drop-shadow(0 0 4px #ffb700);"></svg></div>
-    </div>
-    <div class="pipeline">
-      <div class="pipe-title">Pipeline Status</div>
-      <div class="pipe-step" id="step-1"><div class="pipe-icon"></div>Query pre-processing</div>
-      <div class="pipe-step" id="step-2"><div class="pipe-icon"></div>FAISS + BM25 retrieval</div>
-      <div class="pipe-step" id="step-3"><div class="pipe-icon"></div>Cross-encoder reranking</div>
-      <div class="pipe-step" id="step-4"><div class="pipe-icon"></div>Phi-3-mini generation</div>
-      <div class="pipe-step" id="step-5"><div class="pipe-icon"></div>NLI hallucination check</div>
-    </div>
-    <div class="model-card"><strong>Model:</strong> Phi-3-mini-4k<br><strong>Config:</strong> QLoRA r=16 | 4-bit NF4<br><strong>Data:</strong> MedMCQA 4700 samples</div>
-  </div>
-  <div class="center-panel">
-    <div class="progress-bar-container"><div class="progress-bar" id="main-progress"></div></div>
-    <div class="api-status-banner">
-      <div class="status-dot demo" id="api-dot"></div>
-      <div>
-        <h2 style="font-size: 18px; margin-bottom: 2px;" id="api-title">MedLexica Clinical AI <span style="font-size: 12px; color: var(--acc-amber)" id="api-badge">(DEMO MODE)</span></h2>
-        <div style="font-size: 12px; color: var(--text-muted);" id="api-stats">Checking connection...</div>
-      </div>
-    </div>
-    <div class="query-box"><textarea class="query-input" id="q-input" placeholder=""></textarea></div>
-    <div class="example-pills">
-      <div class="pill" onclick="fillQuery(this)">First-line treatment for dengue fever in Indian adults...</div>
-      <div class="pill" onclick="fillQuery(this)">Standard dose of metformin for Type 2 diabetes...</div>
-      <div class="pill" onclick="fillQuery(this)">RNTCP guidelines for pulmonary tuberculosis...</div>
-      <div class="pill" onclick="fillQuery(this)">CAP management with CURB-65 scoring...</div>
-      <div class="pill" onclick="fillQuery(this)">Bleeding risk for warfarin-aspirin interaction...</div>
-    </div>
-    <button class="submit-btn" id="submit-btn"><span id="btn-text">Generate Clinical Answer</span></button>
-    <div class="response-card" id="response-container">
-      <div class="response-text" id="response-text"></div>
-      <div class="response-footer">
-        <div class="hal-ind"><div class="arc-wrapper"><div class="arc safe" id="hal-arc"></div></div><span id="hal-text" style="color: var(--text-muted)">Hallucination Safe</span></div>
-        <div style="display: flex; gap: 10px;"><div class="badge" id="latency-badge">--</div><div class="badge" id="model-badge">medlexica-v1</div></div>
-        <div class="danger-banner" id="warning-banner">⚠️ Warning: Potential Hallucination Detected</div>
-      </div>
-      <div id="disclaimer-bar" style="font-size: 10px; color: var(--text-muted); margin-top: 15px; text-align: center; display: none;"></div>
-    </div>
-    <div class="scorecard">
-      <h3 style="margin-bottom: 5px;">Evaluation Scorecard</h3>
-      <div class="score-grid">
-        <div class="score-header">Metric</div><div class="score-header">Base Phi-3</div><div class="score-header">MedLexica</div><div class="score-header">Delta</div>
-        <div class="score-row"><div><div>ROUGE-L<div class="score-bar-bg"><div class="score-bar-fill" data-percent="46.2"></div></div></div></div><div class="mono">0.2841</div><div class="mono">0.4623</div><div class="delta-pos">+62.7%</div></div>
-        <div class="score-row"><div><div>BERTScore F1<div class="score-bar-bg"><div class="score-bar-fill" data-percent="83.4"></div></div></div></div><div class="mono">0.7134</div><div class="mono">0.8341</div><div class="delta-pos">+16.9%</div></div>
-        <div class="score-row"><div><div>Hallucination Rate<div class="score-bar-bg"><div class="score-bar-fill" data-percent="12.0"></div></div></div></div><div class="mono">38.0%</div><div class="mono">12.0%</div><div class="delta-pos" style="color:var(--acc-cyan)">-68.4%</div></div>
-        <div class="score-row"><div><div>ICD-10 Accuracy<div class="score-bar-bg"><div class="score-bar-fill" data-percent="38.0"></div></div></div></div><div class="mono">12.0%</div><div class="mono">38.0%</div><div class="delta-pos">+216.7%</div></div>
-        <div class="score-row"><div><div>P95 Latency<div class="score-bar-bg"><div class="score-bar-fill" data-percent="90"></div></div></div></div><div class="mono">4200ms</div><div class="mono">3800ms</div><div class="delta-pos" style="color:var(--acc-cyan)">-9.5%</div></div>
-      </div>
-    </div>
-  </div>
-  <div class="sidebar-right">
-    <div class="section-title">Retrieved Sources</div>
-    <div class="sources-container" id="sources-container"></div>
-    <div class="training-metrics">
-      <div class="section-title">Training Metrics</div>
-      <canvas class="loss-chart" id="lossChart"></canvas>
-      <div class="metric-row"><span>Epochs</span><span class="metric-val">3/3</span></div>
-      <div class="metric-row"><span>Samples</span><span class="metric-val">4,700</span></div>
-      <div class="metric-row"><span>Steps</span><span class="metric-val">263</span></div>
-      <a href="https://wandb.ai/shivuladuushivam-/medlexica-hackathon" target="_blank" class="wandb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 4H3a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1zm-1 14H4V6h16v12z"/><path d="M14 10h4v2h-4zM6 10h6v2H6zM6 14h12v2H6z"/></svg> Live W&B Dashboard</a>
-    </div>
-  </div>
+<!-- LEFT -->
+<div class="col-left">
+<div class="section-title">LIVE VITALS</div>
+<div class="vital-card"><div class="vital-header"><span class="vital-label">HEART RATE</span><span class="vital-value" style="color:var(--green)">72 BPM</span></div><canvas class="vital-canvas" id="ecgCanvas"></canvas></div>
+<div class="vital-card"><div class="vital-header"><span class="vital-label">SpO2</span><span class="vital-value" style="color:var(--cyan)">98%</span></div><canvas class="vital-canvas" id="spo2Canvas"></canvas></div>
+<div class="vital-card"><div class="vital-header"><span class="vital-label">BLOOD PRESSURE</span><span class="vital-value" style="color:var(--amber)">120/80</span></div><canvas class="vital-canvas" id="bpCanvas"></canvas></div>
+<div class="section-title" style="margin-top:16px">PIPELINE STATUS</div>
+<div id="pipeline">
+<div class="pipeline-step"><div class="step-dot" id="s1"></div><span class="step-name">Query pre-processing</span><span class="step-detail" id="d1"></span></div>
+<div class="pipeline-step"><div class="step-dot" id="s2"></div><span class="step-name">FAISS + BM25 retrieval</span><span class="step-detail" id="d2"></span></div>
+<div class="pipeline-step"><div class="step-dot" id="s3"></div><span class="step-name">Cross-encoder reranking</span><span class="step-detail" id="d3"></span></div>
+<div class="pipeline-step"><div class="step-dot" id="s4"></div><span class="step-name">Phi-3-mini generation</span><span class="step-detail" id="d4"></span></div>
+<div class="pipeline-step"><div class="step-dot" id="s5"></div><span class="step-name">NLI hallucination check</span><span class="step-detail" id="d5"></span></div>
+</div>
+<div class="section-title" style="margin-top:16px">MODEL INFO</div>
+<div class="info-row"><span>Base model</span><span>Phi-3-mini-4k</span></div>
+<div class="info-row"><span>Fine-tuning</span><span>QLoRA r=16 α=32</span></div>
+<div class="info-row"><span>Quantization</span><span>4-bit NF4</span></div>
+<div class="info-row"><span>Training data</span><span>MedMCQA 4,700</span></div>
+<div class="info-row"><span>Retrieval</span><span>FAISS + BM25</span></div>
+<div class="info-row"><span>Reranker</span><span>ms-marco-MiniLM</span></div>
+</div>
+<!-- CENTER -->
+<div class="col-center">
+<div class="api-bar"><div class="status-dot" style="background:var(--amber)"></div><span>DEMO MODE — Pre-loaded clinical responses active</span></div>
+<div class="query-label">CLINICAL QUERY</div>
+<textarea id="queryInput" placeholder="First-line treatment for dengue fever with warning signs?"></textarea>
+<div class="pills">
+<div class="pill" onclick="pillClick('dengue')">Dengue fever treatment</div>
+<div class="pill" onclick="pillClick('diabetes')">Type 2 diabetes</div>
+<div class="pill" onclick="pillClick('pneumonia')">Pneumonia guidelines</div>
+<div class="pill" onclick="pillClick('tb')">TB RNTCP protocol</div>
+<div class="pill" onclick="pillClick('warfarin')">Warfarin aspirin interaction</div>
+</div>
+<button class="submit-btn" id="submitBtn" onclick="runQuery()"><span class="spinner"></span><span id="btnText">GENERATE CLINICAL ANSWER</span></button>
+<div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="response-card" id="responseCard"><div class="response-empty">Submit a query to see the AI-generated clinical response</div></div>
+<div class="metrics-bar" id="metricsBar" style="display:none"></div>
+<div class="disclaimer" id="disclaimer" style="display:none">⚠ AI-generated content for educational purposes only. Not a substitute for professional medical advice.</div>
+<div class="scorecard">
+<div class="section-title">EVALUATION SCORECARD <span class="badge">vs Base Phi-3-mini</span></div>
+<div class="score-row"><span class="score-name">ROUGE-L</span><span class="score-base">0.2841</span><div class="score-bar-wrap"><div class="score-bar" data-w="46"></div></div><span class="score-val">0.4623</span><span class="score-delta">+62.7%</span></div>
+<div class="score-row"><span class="score-name">BERTScore F1</span><span class="score-base">0.7134</span><div class="score-bar-wrap"><div class="score-bar" data-w="83"></div></div><span class="score-val">0.8341</span><span class="score-delta">+16.9%</span></div>
+<div class="score-row"><span class="score-name">Hallucination</span><span class="score-base">38.0%</span><div class="score-bar-wrap"><div class="score-bar" data-w="88"></div></div><span class="score-val">12.0%</span><span class="score-delta">-68.4%</span></div>
+<div class="score-row"><span class="score-name">ICD-10 Acc.</span><span class="score-base">12.0%</span><div class="score-bar-wrap"><div class="score-bar" data-w="38"></div></div><span class="score-val">38.0%</span><span class="score-delta">+216.7%</span></div>
+<div class="score-row"><span class="score-name">P95 Latency</span><span class="score-base">4200ms</span><div class="score-bar-wrap"><div class="score-bar" data-w="90"></div></div><span class="score-val">3800ms</span><span class="score-delta">-9.5%</span></div>
+</div>
+</div>
+<!-- RIGHT -->
+<div class="col-right">
+<div class="section-title">RETRIEVED SOURCES <span class="badge" id="srcCount">0</span></div>
+<div id="sourcesPanel"><div class="sources-empty">Sources appear after query</div></div>
+<div class="section-title" style="margin-top:20px">TRAINING METRICS</div>
+<canvas class="loss-chart" id="lossChart"></canvas>
+<div class="train-row"><span>Epochs</span><span>3/3</span></div>
+<div class="train-row"><span>Samples</span><span>4,700</span></div>
+<div class="train-row"><span>Steps</span><span>263</span></div>
+<div class="train-row"><span>Final Loss</span><span>5.65</span></div>
+<button class="wandb-btn" onclick="window.open('https://wandb.ai/shivuladuushivam-/medlexica-hackathon','_blank')">📊 View W&B Dashboard</button>
+</div>
 </div>
 <script>
-let demoMode = true; // standalone offline mode
-const API = "http://localhost:8000";
-const qInput = document.getElementById('q-input');
-const placeholders = ["First-line treatment for dengue fever in Indian adults...", "Standard dose of metformin for Type 2 diabetes...", "RNTCP guidelines for pulmonary tuberculosis..."];
-let plIdx = 0; let charIdx = 0; let typing = true;
-function typeP() {
-  if (document.activeElement === qInput) { setTimeout(typeP, 1000); return; }
-  if (typing) { qInput.setAttribute('placeholder', placeholders[plIdx].substring(0, ++charIdx)); if (charIdx === placeholders[plIdx].length) { typing = false; setTimeout(typeP, 2000); } else setTimeout(typeP, 50); }
-  else { qInput.setAttribute('placeholder', placeholders[plIdx].substring(0, --charIdx)); if (charIdx === 0) { typing = true; plIdx = (plIdx + 1) % placeholders.length; setTimeout(typeP, 500); } else setTimeout(typeP, 20); }
-}
-setTimeout(typeP, 1000);
-function fillQuery(el) { qInput.value = el.innerText.replace('...',''); qInput.focus(); }
-const btn = document.getElementById('submit-btn');
-btn.addEventListener('click', function(e) {
-  if(this.classList.contains('loading')) return;
-  const rect = this.getBoundingClientRect(); const ripple = document.createElement('span'); ripple.className = 'ripple';
-  ripple.style.left = (e.clientX - rect.left) + 'px'; ripple.style.top = (e.clientY - rect.top) + 'px'; ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + 'px';
-  this.appendChild(ripple); setTimeout(() => ripple.remove(), 600); runPipeline();
-});
-const cvs = document.getElementById('lossChart'); const ctx = cvs.getContext('2d');
-cvs.width = cvs.offsetWidth; cvs.height = cvs.offsetHeight; ctx.beginPath(); ctx.moveTo(0, cvs.height - ((11-6)/(12-5))*cvs.height);
-for(let i=1; i<=263; i++) { const x = (i/263) * cvs.width; const y = cvs.height - (((11 - Math.pow(i/263, 0.4)*5 + (Math.random()-0.5)*0.5) - 5) / 7) * cvs.height; ctx.lineTo(x, y); }
-ctx.strokeStyle = '#ffb700'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.lineTo(cvs.width, cvs.height); ctx.lineTo(0, cvs.height); ctx.fillStyle = 'rgba(255, 183, 0, 0.1)'; ctx.fill();
-setTimeout(() => { document.querySelectorAll('.score-bar-fill').forEach(bar => { bar.style.width = bar.getAttribute('data-percent') + '%'; }); }, 500);
-let t = 0;
-function wave() {
-  t += 1; let ecg = 'M0,20 ', spo2 = 'M0,20 ', bp = 'M0,20 ';
-  for(let i=0; i<=210; i++) { let y = 20, p = (i - t*2 + 1000) % 100; if(p>0 && p<20) { if(p<5) y-=p; else if(p<10) y=15+(p-5)*6; else if(p<15) y=45-(p-10)*5; } ecg+=`L${i},${y} `; }
-  for(let i=0; i<=210; i+=5) spo2+=`L${i},${20 + Math.sin(i/20 + t*0.05)*10} `;
-  for(let i=0; i<=210; i+=3) { let p = (i/15 + t*0.04)%Math.PI; bp+=`L${i},${20 - (p<1.5?p*10:15-(p-1.5)*5)} `; }
-  document.getElementById('ecg-wave').innerHTML=`<path d="${ecg}" fill="none" stroke="#00ff88" stroke-width="1.5"/>`; document.getElementById('spo2-wave').innerHTML=`<path d="${spo2}" fill="none" stroke="#00d4ff" stroke-width="1.5"/>`; document.getElementById('bp-wave').innerHTML=`<path d="${bp}" fill="none" stroke="#ffb700" stroke-width="1.5"/>`;
-  document.getElementById('logo-pulse').setAttribute('cx', (t*1.5)%220); requestAnimationFrame(wave);
-}
-requestAnimationFrame(wave);
-const demoData = {
-  "dengue fever": { response: "For Dengue fever [ICD-10: A97.1], the first-line management is supportive care. Acetaminophen (Paracetamol) is the standard antipyretic.
-
-• Fluid therapy is critical during the critical phase for capillary leak syndrome.
-• Avoid NSAIDs (like Ibuprofen or Aspirin) due to bleeding risk.
-• Monitor hematocrit and platelet counts closely.", retrieved_sources: [{doc_id: "WHO_Dengue_2024", rerank_score: 0.94, text: "Clinical management of Dengue guidelines emphasizing fluid replacement..."}, {doc_id: "Indian_Health_Protocol", rerank_score: 0.89, text: "Standard operational procedures for Dengue fever management in Indian adults..."}], hallucination_score: 0.05, hallucination_flag: false, latency_ms: 2100 },
-  "diabetes": { response: "For Type 2 Diabetes Mellitus [ICD-10: E11], the standard initial oral hypoglycemic is Metformin.
-
-Starting dose: 500 mg once or twice daily with meals.
-Titration: Increase by 500 mg weekly.
-Max dose: 2000-2550 mg/day.
-Monitor renal function (eGFR) periodically.", retrieved_sources: [{doc_id: "ADA_Guidelines_2024", rerank_score: 0.96, text: "Pharmacologic approaches to glycemic treatment in Type 2 Diabetes..."}], hallucination_score: 0.02, hallucination_flag: false, latency_ms: 1850 },
-  "pneumonia": { response: "For Community-Acquired Pneumonia (CAP) [ICD-10: J18.9], calculate the CURB-65 score to determine inpatient vs outpatient management:
-
-C - Confusion
-U - Urea >7 mmol/L
-R - Respiratory rate >=30/min
-B - Blood pressure (SBP<90 or DBP<=60)
-65 - Age >= 65
-
-Score 0-1: Outpatient. Score 2: Inpatient. Score 3+: ICU admission recommended.", retrieved_sources: [{doc_id: "Thoracic_Society_BMJ", rerank_score: 0.92, text: "CURB-65 severity score application and CAP clinical outcomes..."}], hallucination_score: 0.11, hallucination_flag: false, latency_ms: 3100 },
-  "warfarin": { response: "Long-term usage of Aspirin [ICD-10: Z79.01] combined with Warfarin significantly increases the risk of major bleeding (GI bleeding and intracranial hemorrhage).
-
-Concomitant use should be restricted to patients with absolute indications (e.g., mechanical heart valve + recent ACS). INR target must be strictly monitored.", retrieved_sources: [{doc_id: "AHA_Bleeding_Risk", rerank_score: 0.95, text: "Antithrombotic therapy interaction risks in atrial fibrillation and ACS..."}], hallucination_score: 0.08, hallucination_flag: false, latency_ms: 2600 },
-  "tuberculosis": { response: "Under RNTCP protocols for Pulmonary Tuberculosis [ICD-10: A15.0], standard first-line treatment follows the DOTS strategy. Regiment consists of 2 months of HRZE (Isoniazid, Rifampicin, Pyrazinamide, Ethambutol) followed by 4 months of HRE.
-
-Always rule out drug resistance (MDR/XDR) via GeneXpert before initiation.", retrieved_sources: [{doc_id: "RNTCP_India_Docs", rerank_score: 0.98, text: "Revised National TB Control Programme technical operational guidelines..."}], hallucination_score: 0.01, hallucination_flag: false, latency_ms: 2900 }
+// ─── DEMO RESPONSES ────────────────────────────────────
+const RESPONSES={
+dengue:{response:"Dengue fever management in Indian adults follows\nWHO and NVBDCP guidelines.\n\nFor dengue with warning signs (ICD-10: A97.1),\nimmediate hospitalization is required.\n\nFirst-line management:\n1. Fluid therapy: IV crystalloids (Normal Saline or\n   Ringer Lactate) at 5-7 mL/kg/hr\n2. Antipyretics: Paracetamol 500mg-1g every 6 hours.\n   NSAIDs and aspirin are CONTRAINDICATED\n3. Monitor: CBC every 6-12 hours, haematocrit, platelets\n4. Platelet transfusion only if count below 10,000/mm3\n   with active bleeding\n\nFor dengue without warning signs (ICD-10: A97.0),\noral rehydration and outpatient management is appropriate.\n\nDISCLAIMER: AI-generated content. Not medical advice.",sources:[{file:"dengue_protocol.txt",text:"WHO dengue guidelines recommend fluid management as cornerstone of therapy...",score:0.94},{file:"nvbdcp_guidelines.txt",text:"NVBDCP India protocol: Warning signs require hospital admission...",score:0.89},{file:"clinical_pharmacology.txt",text:"Paracetamol is analgesic of choice. NSAIDs strictly contraindicated...",score:0.81},{file:"emergency_medicine.txt",text:"Warning signs: severe abdominal pain, persistent vomiting, bleeding...",score:0.76},{file:"icd10_index.txt",text:"A97 Dengue. A97.0 without warning signs. A97.1 with warning signs...",score:0.71}],hall:0.87,latency:1842},
+diabetes:{response:"Type 2 diabetes mellitus management in Indian adults\n(ICD-10: E11) follows ADA and RSSDI guidelines.\n\nFirst-line therapy:\n1. Metformin: Start 500mg once daily with meals.\n   Titrate to 1000-2000mg per day over 4 weeks.\n   Contraindicated if eGFR below 30.\n\n2. Lifestyle modification: Medical nutrition therapy,\n   150 minutes per week moderate aerobic activity.\n\n3. HbA1c targets: Below 7.0% for most patients.\n   Below 8.0% for elderly or multiple comorbidities.\n\nSecond-line if HbA1c not at target after 3 months:\n- SGLT-2 inhibitors (Empagliflozin) if CVD or CKD\n- GLP-1 agonists if weight loss needed\n- Sulfonylureas (Glimepiride 1-4mg) cost-effective option\n- DPP-4 inhibitors (Sitagliptin 100mg) if hypoglycemia risk\n\nIndian patients have higher risk of early beta-cell\nfailure (ICD-10: E11.9). Monitor closely.\n\nDISCLAIMER: AI-generated content. Not medical advice.",sources:[{file:"diabetes_guidelines.txt",text:"RSSDI and ADA consensus: Metformin remains first-line for T2DM in India...",score:0.96},{file:"pharmacology_db.txt",text:"Metformin reduces hepatic glucose via AMPK. Dose 500mg BD titrate to 2000mg...",score:0.91},{file:"endocrinology.txt",text:"HbA1c individualization: below 7% young patients, below 8% elderly...",score:0.85},{file:"drug_interactions.txt",text:"SGLT-2 inhibitors provide cardiovascular and renal protection...",score:0.78},{file:"indian_guidelines.txt",text:"Indian phenotype: higher propensity for early insulin secretory defect...",score:0.72}],hall:0.91,latency:2103},
+pneumonia:{response:"Community-acquired pneumonia in Indian adults\n(ICD-10: J18.9) — antibiotic selection per CURB-65.\n\nSeverity assessment CURB-65:\nConfusion, Urea above 7, RR above 30,\nBP below 90/60, Age above 65.\nScore 0-1: outpatient. Score 2: hospital.\nScore 3 or more: ICU consideration.\n\nOutpatient CURB-65 score 0-1:\n- Amoxicillin 500mg three times daily for 5 days OR\n- Azithromycin 500mg once daily for 3 days\n\nInpatient non-severe CURB-65 score 2:\n- Amoxicillin-Clavulanate 625mg TDS plus\n  Azithromycin 500mg once daily for 7 days\n\nSevere CAP CURB-65 score 3 or more:\n- IV Ceftriaxone 1-2g once daily plus\n  IV Azithromycin 500mg once daily\n\nIndia note: Atypical organisms are common.\nFollow ICMR antibiotic stewardship guidelines.\n\nDISCLAIMER: AI-generated content. Not medical advice.",sources:[{file:"pneumonia_guidelines.txt",text:"ICMR CAP guidelines: CURB-65 recommended severity scoring tool...",score:0.95},{file:"antibiotic_stewardship.txt",text:"Azithromycin covers atypical pathogens. Mycoplasma 15-20% of CAP in India...",score:0.88},{file:"respiratory_medicine.txt",text:"CURB-65: each criterion scores 1 point. Score 2 moderate risk hospitalize...",score:0.83},{file:"clinical_pharmacology.txt",text:"Beta-lactam plus macrolide combination broad spectrum. Duration 5-7 days...",score:0.77},{file:"icd10_respiratory.txt",text:"J18.9 Pneumonia unspecified. J15 Bacterial pneumonia. J15.7 Mycoplasma...",score:0.69}],hall:0.88,latency:1967},
+tb:{response:"Pulmonary tuberculosis (ICD-10: A15.0)\nIndia has highest TB burden globally.\n\nDiagnosis:\n- Sputum AFB smear x2 early morning\n- CBNAAT/GeneXpert preferred, detects rifampicin resistance\n- Chest X-ray: upper lobe infiltrates, cavitation classic\n\nTreatment per RNTCP/NTEP 2019 guidelines:\n\nIntensive phase 2 months:\nIsoniazid + Rifampicin + Pyrazinamide + Ethambutol\n\nContinuation phase 4 months:\nIsoniazid + Rifampicin\n\nAll treatment under DOTS (Directly Observed Treatment).\nFree via government health centres under NIKSHAY portal.\n\nDrug-resistant TB (ICD-10: A15):\nMDR-TB resistant to Isoniazid and Rifampicin:\nBedaquiline-based regimen for 18-20 months.\n\nMonitoring:\n- Sputum culture at 2 months\n- LFTs monthly for hepatotoxicity\n- Visual acuity for ethambutol optic neuritis\n\nNotifiable disease: register on NIKSHAY portal mandatory.\n\nDISCLAIMER: AI-generated content. Not medical advice.",sources:[{file:"rntcp_guidelines.txt",text:"RNTCP/NTEP 2019: HRZE intensive phase 2 months then HR 4 months...",score:0.98},{file:"tb_diagnosis.txt",text:"GeneXpert MTB/RIF preferred. Sensitivity 88% specificity 98% vs culture...",score:0.91},{file:"drug_resistant_tb.txt",text:"MDR-TB: Bedaquiline plus Pretomanid plus Linezolid BPaL regimen...",score:0.84},{file:"tb_monitoring.txt",text:"Hepatotoxicity: LFTs baseline, 2 weeks, monthly. Stop if ALT 3x ULN...",score:0.79},{file:"icd10_infectious.txt",text:"A15 Respiratory tuberculosis. A15.0 confirmed by sputum microscopy...",score:0.74}],hall:0.93,latency:2234},
+warfarin:{response:"Warfarin-aspirin drug interaction — clinically\nsignificant, requires careful management.\n\nInteraction mechanism:\nWarfarin (Z79.01) plus aspirin creates dual effect:\n1. Aspirin inhibits COX-1, impairs platelet aggregation\n2. Aspirin displaces warfarin from plasma proteins,\n   increases free warfarin levels\n3. Combined effect increases major bleeding risk 2-3 times\n\nMonitoring requirements:\n- Check INR within 3-5 days of adding aspirin\n- Target INR: 2.0-3.0 for most indications\n- Monitor: dark stools, haematuria, unusual bruising\n\nWhen combination is acceptable:\n- Mechanical heart valves: low-dose aspirin 75-100mg\n- Recent ACS with AF: short-term triple therapy\n\nWhen to avoid:\n- History of GI bleed\n- Uncontrolled hypertension\n- Age above 75 years: very high bleeding risk\n\nAlways document indication and discuss risk with patient.\n\nDISCLAIMER: AI-generated content. Not medical advice.",sources:[{file:"drug_interactions.txt",text:"Warfarin-aspirin major interaction. Aspirin displaces warfarin from albumin...",score:0.97},{file:"clinical_pharmacology.txt",text:"INR monitoring: Baseline before aspirin. Recheck 3-5 days after adding...",score:0.92},{file:"anticoagulation.txt",text:"Triple therapy ACS plus AF: warfarin plus aspirin plus clopidogrel...",score:0.86},{file:"bleeding_risk.txt",text:"Risk factors: age above 75, prior GI bleed, uncontrolled hypertension...",score:0.79},{file:"prescribing_guidelines.txt",text:"Patient counselling: Report black tarry stools immediately. Avoid NSAIDs...",score:0.73}],hall:0.89,latency:1654}
 };
-const keys = Object.keys(demoData);
-function getDemo(q) { let k = keys.find(x => q.toLowerCase().includes(x)); return demoData[k] || demoData[keys[0]]; }
-async function chkHealth() {
-  if(window.location.pathname.includes('standalone')) { setDemo(); return; }
-  try {
-    let r = await fetch(API+"/health", {timeout:2000}), d = await r.json();
-    if(d.status==="ok") {
-      document.getElementById('api-dot').className='status-dot live'; document.getElementById('api-badge').innerText=''; document.getElementById('api-stats').innerText=`API LIVE | Uptime: ${d.uptime_seconds}s | Queries: ${d.total_queries_served}`; demoMode=false;
-    } else setDemo();
-  } catch { setDemo(); }
+const QUERIES={dengue:"First-line treatment for dengue fever with warning signs in Indian adults?",diabetes:"Standard metformin dosing protocol for Type 2 diabetes mellitus in Indian adults?",pneumonia:"Community-acquired pneumonia antibiotic selection using CURB-65 scoring?",tb:"RNTCP DOTS protocol for pulmonary tuberculosis diagnosis and treatment?",warfarin:"Warfarin and aspirin drug interaction — bleeding risk and INR monitoring?"};
+
+// ─── TOPIC DETECTION ───────────────────────────────────
+function detectTopic(q){q=q.toLowerCase();if(q.includes('dengue'))return'dengue';if(q.includes('diabetes')||q.includes('metformin'))return'diabetes';if(q.includes('pneumonia')||q.includes('cap')||q.includes('curb'))return'pneumonia';if(q.includes('tb')||q.includes('tuberculosis')||q.includes('rntcp')||q.includes('dots'))return'tb';if(q.includes('warfarin')||q.includes('aspirin'))return'warfarin';return'dengue';}
+
+// ─── PILL CLICK ────────────────────────────────────────
+function pillClick(topic){document.getElementById('queryInput').value=QUERIES[topic];runQuery();}
+
+// ─── PIPELINE ANIMATION ────────────────────────────────
+function resetPipeline(){for(let i=1;i<=5;i++){const d=document.getElementById('s'+i);d.className='step-dot';document.getElementById('d'+i).textContent='';}}
+function setStep(n,state,detail){const d=document.getElementById('s'+n);d.className='step-dot '+state;document.getElementById('d'+n).textContent=detail||'';}
+function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ─── MAIN QUERY FUNCTION ──────────────────────────────
+let running=false;
+async function runQuery(){
+if(running)return;
+const ta=document.getElementById('queryInput');
+const q=ta.value.trim();
+if(!q){alert('Please enter a clinical query');return;}
+running=true;
+const btn=document.getElementById('submitBtn');
+const btnText=document.getElementById('btnText');
+btn.classList.add('loading');btnText.textContent='Processing...';
+const pb=document.getElementById('progressBar');
+const pf=document.getElementById('progressFill');
+pb.classList.add('active');pf.style.transition='none';pf.style.width='0%';
+requestAnimationFrame(()=>{pf.style.transition='width 3s linear';pf.style.width='100%';});
+resetPipeline();
+document.getElementById('responseCard').innerHTML='<div class="response-empty">Processing query...</div>';
+document.getElementById('metricsBar').style.display='none';
+document.getElementById('disclaimer').style.display='none';
+document.getElementById('sourcesPanel').innerHTML='<div class="sources-empty">Retrieving sources...</div>';
+document.getElementById('srcCount').textContent='0';
+// Pipeline steps
+setStep(1,'running');await wait(400);setStep(1,'done','tokenized');
+setStep(2,'running');await wait(700);setStep(2,'done','top 25 chunks');
+setStep(3,'running');await wait(600);setStep(3,'done','top 5 selected');
+setStep(4,'running');await wait(1200);setStep(4,'done','generated');
+setStep(5,'running');await wait(400);setStep(5,'done','grounded');
+// Get response
+const topic=detectTopic(q);const data=RESPONSES[topic];
+// Stream text
+const rc=document.getElementById('responseCard');
+rc.innerHTML='<div class="response-text" id="respText"></div>';
+const rt=document.getElementById('respText');
+const txt=data.response;let i=0;
+await new Promise(resolve=>{const iv=setInterval(()=>{if(i<txt.length){rt.textContent+=txt[i];i++;rt.scrollTop=rt.scrollHeight;}else{clearInterval(iv);resolve();}},12);});
+// Highlight ICD codes
+rt.innerHTML=rt.textContent.replace(/([A-Z]\d{2}(?:\.\d+)?)/g,'<span class="icd">$1</span>');
+// Metrics bar
+const mb=document.getElementById('metricsBar');
+const hc=document.createElement('canvas');hc.width=36;hc.height=36;
+const hctx=hc.getContext('2d');
+hctx.beginPath();hctx.arc(18,18,14,0,Math.PI*2);hctx.strokeStyle='#162444';hctx.lineWidth=4;hctx.stroke();
+hctx.beginPath();hctx.arc(18,18,14,-Math.PI/2,-Math.PI/2+Math.PI*2*data.hall);hctx.strokeStyle=data.hall>0.7?'#00ff88':'#ffb700';hctx.lineWidth=4;hctx.stroke();
+const hlabel=data.hall>0.7?'GROUNDED':'VERIFY';
+const hcolor=data.hall>0.7?'var(--green)':'var(--amber)';
+mb.innerHTML='';
+const hi=document.createElement('div');hi.className='hall-indicator';
+hi.innerHTML='<div class="hall-arc"></div><span class="hall-label" style="color:'+hcolor+'">'+hlabel+' '+Math.round(data.hall*100)+'%</span>';
+hi.querySelector('.hall-arc').appendChild(hc);
+mb.appendChild(hi);
+mb.innerHTML+='<span class="metric-chip">⏱ '+data.latency+'ms</span><span class="metric-chip">🤖 medlexica-v1</span><span class="metric-chip">📄 5 sources</span>';
+mb.style.display='flex';
+document.getElementById('disclaimer').style.display='block';
+// Sources
+const sp=document.getElementById('sourcesPanel');sp.innerHTML='';
+document.getElementById('srcCount').textContent='5';
+data.sources.forEach((s,idx)=>{const c=document.createElement('div');c.className='source-card';c.innerHTML='<div class="source-top"><span class="source-file">'+s.file+'</span><span class="source-score">'+s.score.toFixed(2)+'</span></div><div class="source-bar"><div class="source-bar-fill" style="width:0%"></div></div><div class="source-preview">'+s.text+'</div>';sp.appendChild(c);setTimeout(()=>{c.classList.add('visible');c.querySelector('.source-bar-fill').style.width=(s.score*100)+'%';},idx*80);});
+// Reset button
+btn.classList.remove('loading');btnText.textContent='GENERATE CLINICAL ANSWER';
+setTimeout(()=>{pb.classList.remove('active');pf.style.width='0%';},500);
+running=false;
 }
-function setDemo() { document.getElementById('api-dot').className='status-dot demo'; document.getElementById('api-badge').innerText='(DEMO MODE)'; document.getElementById('api-stats').innerText='Backend disconnected. Using local fallback.'; demoMode=true; }
-setInterval(chkHealth, 30000); chkHealth();
-async function subQ(q) {
-  if(demoMode) return new Promise(r => setTimeout(()=>r(getDemo(q)), 2000));
-  try { let r = await fetch(API+"/query", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({query:q, top_k_retrieval:20, top_n_rerank:5, stream:false})}); return await r.json(); } catch { return getDemo(q); }
-}
-async function runPipeline() {
-  let q=qInput.value.trim(); if(!q) return;
-  document.getElementById('response-container').classList.remove('visible'); document.getElementById('sources-container').innerHTML='';
-  let st = [1,2,3,4,5].map(i=>document.getElementById(`step-${i}`)); st.forEach(s=>s.className='pipe-step'); btn.classList.add('loading');
-  let pg = document.getElementById('main-progress'); pg.style.width='0%'; setTimeout(()=>pg.style.width='15%', 100); st[0].className='pipe-step active'; let stT = Date.now();
-  let tm = [ setTimeout(()=>{st[0].className='pipe-step done'; st[1].className='pipe-step active'; pg.style.width='40%';}, 500), setTimeout(()=>{st[1].className='pipe-step done'; st[2].className='pipe-step active'; pg.style.width='60%';}, 1000), setTimeout(()=>{st[2].className='pipe-step done'; st[3].className='pipe-step active'; pg.style.width='75%';}, 1500), setTimeout(()=>{st[3].className='pipe-step done'; st[4].className='pipe-step active'; pg.style.width='90%';}, 1900) ];
-  let res = await subQ(q), actL = Date.now() - stT; tm.forEach(clearTimeout); st.forEach(s=>s.className='pipe-step done');
-  pg.style.width='100%'; btn.classList.remove('loading'); setTimeout(()=>pg.style.width='0%', 500); renderRes(res, actL);
-}
-function renderRes(d, l) {
-  document.getElementById('response-container').classList.add('visible'); let tg = document.getElementById('response-text'); tg.innerHTML='<span id="stc"></span><span class="cursor"></span>'; let stc = document.getElementById('stc');
-  let txt = (d.response||'').replace(/\[ICD-10: ([A-Z0-9.\-]+)\]/g, '<span class="icd-pill">$1</span>');
-  ['Acetaminophen', 'Paracetamol', 'NSAIDs', 'Ibuprofen', 'Aspirin', 'Metformin', 'Warfarin', 'Isoniazid', 'Rifampicin', 'Pyrazinamide', 'Ethambutol', 'fluid therapy'].forEach(dr=>{ txt = txt.replace(new RegExp(`(?<!<[^>]*)(${dr})(?![^<]*>)`, "gi"), '<span class="drug-name">$1</span>'); });
-  let i=0, b='', isT=false; function strC() { if(i>=txt.length) return; let c=txt[i++]; b+=c; if(c==='<') isT=true; if(c==='>') isT=false; if(!isT) { stc.innerHTML=b; setTimeout(strC, 15); } else strC(); } strC();
-  let sc = document.getElementById('sources-container'), src = d.retrieved_sources||[];
-  src.forEach((s, x)=>{ let div=document.createElement('div'); div.className='source-card'; div.innerHTML=`<div class="src-header"><span class="src-name">${s.doc_id}</span><div class="src-score"><div class="src-bar"><div class="src-fill" style="width: ${Math.round(s.rerank_score*100)}%"></div></div></div></div><div class="src-text">${s.text}</div>`; sc.appendChild(div); setTimeout(()=>div.classList.add('show'), 150+x*80); });
-  let hal=d.hallucination_score??0.12; document.getElementById('hal-arc').className='arc '+(hal<0.3?'safe':hal<0.6?'warn':'danger'); document.getElementById('hal-text').innerText=`Hallucination Score (${hal.toFixed(3)})`; document.getElementById('latency-badge').innerText=(d.latency_ms||l)+'ms';
-  document.getElementById('warning-banner').style.display=(d.hallucination_flag||hal>0.6)?'block':'none';
-}
+// Ctrl+Enter
+document.getElementById('queryInput').addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter')runQuery();});
+
+// ─── VITALS: ECG CANVAS ──────────────────────────────
+(function(){
+const c=document.getElementById('ecgCanvas');const ctx=c.getContext('2d');
+let W,H;function resize(){W=c.offsetWidth;H=c.offsetHeight;c.width=W*2;c.height=H*2;ctx.scale(2,2);}resize();
+let offset=0;
+function ecgY(x){x=((x%80)+80)%80;if(x<10)return 0;x-=10;if(x<8)return-8*Math.sin(x/8*Math.PI);x-=8;if(x<5)return 0;x-=5;if(x<3)return 5*(x/3);x-=3;if(x<4)return 5-30*(x/4);x-=4;if(x<4)return-25+33*(x/4);x-=4;if(x<10)return 0;x-=10;if(x<15)return-10*Math.sin(x/15*Math.PI);return 0;}
+function draw(){ctx.clearRect(0,0,W,H);ctx.beginPath();ctx.strokeStyle='#00ff88';ctx.lineWidth=1.5;ctx.shadowColor='#00ff88';ctx.shadowBlur=6;
+for(let x=0;x<W;x++){const y=H/2+ecgY(x+offset)*H/60;if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();ctx.shadowBlur=0;
+offset+=2;requestAnimationFrame(draw);}draw();
+})();
+// SpO2
+(function(){
+const c=document.getElementById('spo2Canvas');const ctx=c.getContext('2d');
+let W,H;function resize(){W=c.offsetWidth;H=c.offsetHeight;c.width=W*2;c.height=H*2;ctx.scale(2,2);}resize();
+let offset=0;
+function draw(){ctx.clearRect(0,0,W,H);ctx.beginPath();ctx.strokeStyle='#00d4ff';ctx.lineWidth=1.5;ctx.shadowColor='#00d4ff';ctx.shadowBlur=6;
+for(let x=0;x<W;x++){const y=H/2+Math.sin((x+offset)/12)*H*0.35;if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();ctx.shadowBlur=0;
+offset+=2;requestAnimationFrame(draw);}draw();
+})();
+// BP
+(function(){
+const c=document.getElementById('bpCanvas');const ctx=c.getContext('2d');
+let W,H;function resize(){W=c.offsetWidth;H=c.offsetHeight;c.width=W*2;c.height=H*2;ctx.scale(2,2);}resize();
+let offset=0;
+function draw(){ctx.clearRect(0,0,W,H);ctx.beginPath();ctx.strokeStyle='#ffb700';ctx.lineWidth=1.5;ctx.shadowColor='#ffb700';ctx.shadowBlur=6;
+for(let x=0;x<W;x++){const p=((x+offset)%60)/60;let y;if(p<0.15)y=-0.6;else if(p<0.3)y=0.4;else if(p<0.5)y=-0.3;else if(p<0.65)y=0.2;else y=0;
+y=H/2+y*H*0.4;if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();ctx.shadowBlur=0;
+offset+=1.5;requestAnimationFrame(draw);}draw();
+})();
+
+// ─── LOSS CHART ────────────────────────────────────────
+(function(){
+const c=document.getElementById('lossChart');const ctx=c.getContext('2d');
+const W=c.offsetWidth;const H=c.offsetHeight;c.width=W*2;c.height=H*2;ctx.scale(2,2);
+const pts=[[10,11.02],[20,10.26],[30,8.65],[40,7.52],[50,7.12],[60,7.04],[70,6.76],[80,6.61],[90,6.49],[100,6.19],[200,5.80],[260,5.65]];
+const pad={l:40,r:15,t:15,b:25};
+const gW=W-pad.l-pad.r;const gH=H-pad.t-pad.b;
+const xMin=0,xMax=280,yMin=5,yMax=12;
+function sx(v){return pad.l+(v-xMin)/(xMax-xMin)*gW;}
+function sy(v){return pad.t+(yMax-v)/(yMax-yMin)*gH;}
+ctx.fillStyle='#111f38';ctx.fillRect(0,0,W,H);
+ctx.strokeStyle='rgba(0,212,255,0.1)';ctx.lineWidth=0.5;
+for(let y=5;y<=12;y++){ctx.beginPath();ctx.moveTo(pad.l,sy(y));ctx.lineTo(W-pad.r,sy(y));ctx.stroke();ctx.fillStyle='#4a6a8a';ctx.font='9px JetBrains Mono';ctx.textAlign='right';ctx.fillText(y.toFixed(0),pad.l-5,sy(y)+3);}
+ctx.fillStyle='#4a6a8a';ctx.font='8px JetBrains Mono';ctx.textAlign='center';
+[0,50,100,150,200,260].forEach(v=>{ctx.fillText(v,sx(v),H-pad.b+15);});
+ctx.fillText('Training Steps',W/2,H-2);
+ctx.save();ctx.translate(10,H/2);ctx.rotate(-Math.PI/2);ctx.fillText('Loss',0,0);ctx.restore();
+let progress=0;const totalFrames=90;
+function animateLoss(){progress++;const frac=Math.min(progress/totalFrames,1);const drawCount=Math.ceil(pts.length*frac);
+ctx.fillStyle='#111f38';ctx.fillRect(pad.l,pad.t,gW,gH);
+ctx.strokeStyle='rgba(0,212,255,0.1)';ctx.lineWidth=0.5;
+for(let y=5;y<=12;y++){ctx.beginPath();ctx.moveTo(pad.l,sy(y));ctx.lineTo(W-pad.r,sy(y));ctx.stroke();}
+if(drawCount>1){ctx.beginPath();ctx.strokeStyle='#00d4ff';ctx.lineWidth=2;ctx.shadowColor='#00d4ff';ctx.shadowBlur=8;
+for(let i=0;i<drawCount;i++){const[x,y]=pts[i];if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}ctx.stroke();ctx.shadowBlur=0;
+const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+gH);grad.addColorStop(0,'rgba(0,212,255,0.15)');grad.addColorStop(1,'rgba(0,212,255,0)');
+ctx.beginPath();ctx.moveTo(sx(pts[0][0]),sy(pts[0][1]));
+for(let i=1;i<drawCount;i++)ctx.lineTo(sx(pts[i][0]),sy(pts[i][1]));
+ctx.lineTo(sx(pts[drawCount-1][0]),pad.t+gH);ctx.lineTo(sx(pts[0][0]),pad.t+gH);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+for(let i=0;i<drawCount;i++){ctx.beginPath();ctx.arc(sx(pts[i][0]),sy(pts[i][1]),3,0,Math.PI*2);ctx.fillStyle='#00d4ff';ctx.fill();}}
+if(frac<1)requestAnimationFrame(animateLoss);}
+animateLoss();
+})();
+
+// ─── SCORECARD ANIMATION ──────────────────────────────
+document.querySelectorAll('.score-bar').forEach((b,i)=>{setTimeout(()=>{b.style.width=b.dataset.w+'%';},300+i*100);});
+
+// ─── PLACEHOLDER CYCLING ──────────────────────────────
+(function(){
+const phs=["First-line treatment for dengue fever with warning signs?","Standard metformin dosing for Type 2 diabetes in India?","RNTCP DOTS protocol for pulmonary tuberculosis?"];
+let pi=0;const ta=document.getElementById('queryInput');
+setInterval(()=>{if(document.activeElement===ta&&ta.value)return;pi=(pi+1)%phs.length;ta.placeholder=phs[pi];},3000);
+})();
 </script>
 </body>
 </html>
