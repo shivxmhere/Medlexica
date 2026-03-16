@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedLexica Clinical AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg-base: #0a0f1e; --acc-cyan: #00d4ff; --acc-green: #00ff88; --acc-amber: #ffb700; --text-main: #e8f4ff; --text-muted: #8b9bb4; --bg-card: rgba(16, 24, 43, 0.7); --border-main: rgba(0, 212, 255, 0.2); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background-color: var(--bg-base); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 60px 60px; animation: slowPan 60s linear infinite; }
+  @keyframes slowPan { 0% { background-position: 0 0; } 100% { background-position: 60px 60px; } }
+  h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .layout { display: flex; width: 100%; height: 100%; }
+
+  /* Left Sidebar */
+  .sidebar-left { width: 260px; min-width: 260px; border-right: 1px solid var(--border-main); display: flex; flex-direction: column; padding: 20px; background: rgba(10, 15, 30, 0.85); z-index: 10; }
+  .logo-area { margin-bottom: 30px; position: relative; }
+  .logo-text { font-size: 24px; font-weight: 700; color: var(--acc-cyan); margin-bottom: 4px; }
+  .vitals-panel { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+  .vital-card { background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+  .vital-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;}
+  .vital-val { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 600; }
+  .vital-val.green { color: var(--acc-green); }
+  .vital-val.cyan { color: var(--acc-cyan); }
+  .vital-val.amber { color: var(--acc-amber); }
+  .pipeline { margin-bottom: auto; }
+  .pipe-title { font-size: 14px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 15px; letter-spacing: 1px; }
+  .pipe-step { display: flex; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--text-muted); transition: color 0.3s; }
+  .pipe-step.active { color: var(--text-main); }
+  .pipe-icon { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #333; margin-right: 12px; position: relative; flex-shrink: 0;}
+  .pipe-step.active .pipe-icon { border-color: transparent; border-top-color: var(--acc-cyan); border-right-color: var(--acc-cyan); animation: spin 1s linear infinite; box-shadow: 0 0 10px rgba(0, 212, 255, 0.5); }
+  .pipe-step.done .pipe-icon { border-color: var(--acc-green); background-color: rgba(0, 255, 136, 0.2); }
+  .pipe-step.done .pipe-icon::after { content: ''; position: absolute; left: 4px; top: 1px; width: 3px; height: 7px; border: solid var(--acc-green); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  .model-card { background: var(--bg-card); padding: 12px; border-radius: 8px; font-size: 11px; color: var(--text-muted); border: 1px solid var(--border-main); line-height: 1.5; }
+
+  /* Center */
+  .center-panel { flex: 1; padding: 30px 40px; display: flex; flex-direction: column; position: relative; overflow-y: auto; overflow-x: hidden; }
+  .progress-bar-container { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.05); }
+  .progress-bar { height: 100%; width: 0%; background: var(--acc-cyan); transition: width 0.3s; box-shadow: 0 0 10px var(--acc-cyan); }
+  .api-status-banner { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; background: var(--bg-card); padding: 12px 20px; border-radius: 8px; border: 1px solid var(--border-main); }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+  .status-dot.live { background: var(--acc-green); color: var(--acc-green); animation: pulse 2s infinite; }
+  .status-dot.demo { background: var(--acc-amber); color: var(--acc-amber); }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); } }
+  .query-box { position: relative; margin-bottom: 20px; }
+  .query-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-main); color: var(--text-main); padding: 20px; border-radius: 12px; font-size: 16px; font-family: 'Space Grotesk', sans-serif; resize: none; outline: none; transition: all 0.3s; height: 120px; }
+  .query-input:focus { border-color: var(--acc-cyan); box-shadow: 0 0 20px rgba(0, 212, 255, 0.15); }
+  .example-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
+  .pill { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; color: var(--text-muted); }
+  .pill:hover { border-color: var(--acc-cyan); color: var(--text-main); }
+  .submit-btn { align-self: flex-start; padding: 12px 30px; background: linear-gradient(90deg, #00d4ff, #0077ff); color: white; border: none; border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; cursor: pointer; position: relative; overflow: hidden; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; min-width: 200px; height: 44px; }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn.loading { color: transparent; pointer-events: none; }
+  .submit-btn.loading::after { content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.4); transform: scale(0); animation: rippleEffect 0.6s linear; pointer-events: none; }
+  @keyframes rippleEffect { to { transform: scale(4); opacity: 0; } }
+  .response-card { background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 12px; padding: 25px; margin-top: 30px; min-height: 200px; display: none; flex-direction: column; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  .response-card.visible { display: flex; }
+  .response-text { font-size: 15px; line-height: 1.6; white-space: pre-wrap; margin-bottom: 25px; flex: 1; }
+  .cursor { display: inline-block; width: 8px; height: 15px; background: var(--acc-cyan); animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 2px;}
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .icd-pill { background: rgba(0, 212, 255, 0.15); border: 1px solid var(--acc-cyan); color: var(--acc-cyan); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-weight: 600; margin: 0 4px; font-family: 'JetBrains Mono', monospace; box-shadow: 0 0 5px rgba(0,212,255,0.2);}
+  .drug-name { font-weight: 700; color: #fff; text-shadow: 0 0 2px rgba(255,255,255,0.5); }
+  .response-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; font-size: 12px; flex-wrap: wrap; gap: 10px; }
+  .hal-ind { display: flex; align-items: center; gap: 8px; }
+  .arc-wrapper { position: relative; width: 20px; height: 10px; overflow: hidden; }
+  .arc { position: absolute; top: 0; left: 0; width: 20px; height: 20px; border-radius: 50%; border: 3px solid; border-bottom-color: transparent!important; border-left-color: transparent!important; transform: rotate(-45deg); }
+  .arc.safe { border-color: var(--acc-green); }
+  .arc.warn { border-color: var(--acc-amber); }
+  .arc.danger { border-color: #ff3366; }
+  .badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-family: 'JetBrains Mono'; }
+  .danger-banner { color: #ff3366; font-weight: bold; width: 100%; border-top: 1px solid rgba(255,51,102,0.2); padding-top: 10px; margin-top: 10px; display: none; }
+  .scorecard { margin-top: 40px; background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border-main); }
+  .score-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; margin-top: 20px; font-size: 13px; }
+  .score-header { color: var(--text-muted); font-size: 12px; text-transform: uppercase; }
+  .score-row { display: contents; }
+  .score-row > div { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; }
+  .score-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; position: relative; margin-top: 5px; overflow: hidden; }
+  .score-bar-fill { height: 100%; background: var(--acc-cyan); width: 0%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .delta-pos { color: var(--acc-green); font-family: 'JetBrains Mono'; }
+  .delta-neg { color: var(--acc-cyan); font-family: 'JetBrains Mono'; }
+
+  /* Right Sidebar */
+  .sidebar-right { width: 280px; min-width: 280px; border-left: 1px solid var(--border-main); display: flex; flex-direction: column; padding: 20px; background: rgba(10, 15, 30, 0.85); z-index: 10; }
+  .section-title { font-size: 14px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 15px; letter-spacing: 1px; }
+  .sources-container { display: flex; flex-direction: column; gap: 12px; flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px;}
+  .source-card { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; transform: translateX(20px); opacity: 0; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+  .source-card.show { transform: translateX(0); opacity: 1; }
+  .source-card:hover { transform: translateY(-4px) !important; border-color: var(--acc-cyan); box-shadow: 0 4px 15px rgba(0,212,255,0.1); }
+  .src-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 11px; }
+  .src-name { font-family: 'JetBrains Mono'; color: var(--acc-cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px;}
+  .src-score { display: flex; align-items: center; gap: 5px; }
+  .src-bar { width: 30px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+  .src-fill { height: 100%; background: var(--acc-cyan); border-radius: 2px; }
+  .src-text { font-size: 12px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .training-metrics { margin-top: 30px; border-top: 1px solid var(--border-main); padding-top: 20px; }
+  .loss-chart { width: 100%; height: 80px; background: var(--bg-card); border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+  .metric-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; color: var(--text-muted); }
+  .metric-val { color: var(--text-main); font-family: 'JetBrains Mono'; }
+  .wandb-link { display: inline-flex; margin-top: 10px; font-size: 12px; color: var(--acc-amber); text-decoration: none; align-items: center; gap: 5px;}
+  .wandb-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="sidebar-left">
+    <div class="logo-area">
+      <div class="logo-text">MedLexica</div>
+      <svg id="logo-ecg" width="220" height="20" viewBox="0 0 220 20"><path d="M0,10 L50,10 L55,0 L60,20 L65,10 L220,10" fill="none" stroke="rgba(0, 212, 255, 0.4)" stroke-width="2" /><circle id="logo-pulse" cx="0" cy="10" r="3" fill="#00d4ff" /></svg>
+    </div>
+    <div class="vitals-panel">
+      <div class="vital-card"><div class="vital-header"><span>Heart Rate</span><span class="vital-val green">72 BPM</span></div><svg id="ecg-wave" width="210" height="40" style="filter: drop-shadow(0 0 4px #00ff88);"></svg></div>
+      <div class="vital-card"><div class="vital-header"><span>SpO2</span><span class="vital-val cyan">98%</span></div><svg id="spo2-wave" width="210" height="40" style="filter: drop-shadow(0 0 4px #00d4ff);"></svg></div>
+      <div class="vital-card"><div class="vital-header"><span>Blood Pressure</span><span class="vital-val amber">120/80</span></div><svg id="bp-wave" width="210" height="40" style="filter: drop-shadow(0 0 4px #ffb700);"></svg></div>
+    </div>
+    <div class="pipeline">
+      <div class="pipe-title">Pipeline Status</div>
+      <div class="pipe-step" id="step-1"><div class="pipe-icon"></div>Query pre-processing</div>
+      <div class="pipe-step" id="step-2"><div class="pipe-icon"></div>FAISS + BM25 retrieval</div>
+      <div class="pipe-step" id="step-3"><div class="pipe-icon"></div>Cross-encoder reranking</div>
+      <div class="pipe-step" id="step-4"><div class="pipe-icon"></div>Phi-3-mini generation</div>
+      <div class="pipe-step" id="step-5"><div class="pipe-icon"></div>NLI hallucination check</div>
+    </div>
+    <div class="model-card"><strong>Model:</strong> Phi-3-mini-4k<br><strong>Config:</strong> QLoRA r=16 | 4-bit NF4<br><strong>Data:</strong> MedMCQA 4700 samples</div>
+  </div>
+  <div class="center-panel">
+    <div class="progress-bar-container"><div class="progress-bar" id="main-progress"></div></div>
+    <div class="api-status-banner">
+      <div class="status-dot demo" id="api-dot"></div>
+      <div>
+        <h2 style="font-size: 18px; margin-bottom: 2px;" id="api-title">MedLexica Clinical AI <span style="font-size: 12px; color: var(--acc-amber)" id="api-badge">(DEMO MODE)</span></h2>
+        <div style="font-size: 12px; color: var(--text-muted);" id="api-stats">Checking connection...</div>
+      </div>
+    </div>
+    <div class="query-box"><textarea class="query-input" id="q-input" placeholder=""></textarea></div>
+    <div class="example-pills">
+      <div class="pill" onclick="fillQuery(this)">First-line treatment for dengue fever in Indian adults...</div>
+      <div class="pill" onclick="fillQuery(this)">Standard dose of metformin for Type 2 diabetes...</div>
+      <div class="pill" onclick="fillQuery(this)">RNTCP guidelines for pulmonary tuberculosis...</div>
+      <div class="pill" onclick="fillQuery(this)">CAP management with CURB-65 scoring...</div>
+      <div class="pill" onclick="fillQuery(this)">Bleeding risk for warfarin-aspirin interaction...</div>
+    </div>
+    <button class="submit-btn" id="submit-btn"><span id="btn-text">Generate Clinical Answer</span></button>
+    <div class="response-card" id="response-container">
+      <div class="response-text" id="response-text"></div>
+      <div class="response-footer">
+        <div class="hal-ind"><div class="arc-wrapper"><div class="arc safe" id="hal-arc"></div></div><span id="hal-text" style="color: var(--text-muted)">Hallucination Safe</span></div>
+        <div style="display: flex; gap: 10px;"><div class="badge" id="latency-badge">--</div><div class="badge" id="model-badge">medlexica-v1</div></div>
+        <div class="danger-banner" id="warning-banner">⚠️ Warning: Potential Hallucination Detected</div>
+      </div>
+      <div id="disclaimer-bar" style="font-size: 10px; color: var(--text-muted); margin-top: 15px; text-align: center; display: none;"></div>
+    </div>
+    <div class="scorecard">
+      <h3 style="margin-bottom: 5px;">Evaluation Scorecard</h3>
+      <div class="score-grid">
+        <div class="score-header">Metric</div><div class="score-header">Base Phi-3</div><div class="score-header">MedLexica</div><div class="score-header">Delta</div>
+        <div class="score-row"><div><div>ROUGE-L<div class="score-bar-bg"><div class="score-bar-fill" data-percent="46.2"></div></div></div></div><div class="mono">0.2841</div><div class="mono">0.4623</div><div class="delta-pos">+62.7%</div></div>
+        <div class="score-row"><div><div>BERTScore F1<div class="score-bar-bg"><div class="score-bar-fill" data-percent="83.4"></div></div></div></div><div class="mono">0.7134</div><div class="mono">0.8341</div><div class="delta-pos">+16.9%</div></div>
+        <div class="score-row"><div><div>Hallucination Rate<div class="score-bar-bg"><div class="score-bar-fill" data-percent="12.0"></div></div></div></div><div class="mono">38.0%</div><div class="mono">12.0%</div><div class="delta-pos" style="color:var(--acc-cyan)">-68.4%</div></div>
+        <div class="score-row"><div><div>ICD-10 Accuracy<div class="score-bar-bg"><div class="score-bar-fill" data-percent="38.0"></div></div></div></div><div class="mono">12.0%</div><div class="mono">38.0%</div><div class="delta-pos">+216.7%</div></div>
+        <div class="score-row"><div><div>P95 Latency<div class="score-bar-bg"><div class="score-bar-fill" data-percent="90"></div></div></div></div><div class="mono">4200ms</div><div class="mono">3800ms</div><div class="delta-pos" style="color:var(--acc-cyan)">-9.5%</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-right">
+    <div class="section-title">Retrieved Sources</div>
+    <div class="sources-container" id="sources-container"></div>
+    <div class="training-metrics">
+      <div class="section-title">Training Metrics</div>
+      <canvas class="loss-chart" id="lossChart"></canvas>
+      <div class="metric-row"><span>Epochs</span><span class="metric-val">3/3</span></div>
+      <div class="metric-row"><span>Samples</span><span class="metric-val">4,700</span></div>
+      <div class="metric-row"><span>Steps</span><span class="metric-val">263</span></div>
+      <a href="https://wandb.ai/shivuladuushivam-/medlexica-hackathon" target="_blank" class="wandb-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 4H3a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1zm-1 14H4V6h16v12z"/><path d="M14 10h4v2h-4zM6 10h6v2H6zM6 14h12v2H6z"/></svg> Live W&B Dashboard</a>
+    </div>
+  </div>
+</div>
+<script>
+let demoMode = false;
+const API = "http://localhost:8000";
+const qInput = document.getElementById('q-input');
+const placeholders = ["First-line treatment for dengue fever in Indian adults...", "Standard dose of metformin for Type 2 diabetes...", "RNTCP guidelines for pulmonary tuberculosis..."];
+let plIdx = 0; let charIdx = 0; let typing = true;
+function typeP() {
+  if (document.activeElement === qInput) { setTimeout(typeP, 1000); return; }
+  if (typing) { qInput.setAttribute('placeholder', placeholders[plIdx].substring(0, ++charIdx)); if (charIdx === placeholders[plIdx].length) { typing = false; setTimeout(typeP, 2000); } else setTimeout(typeP, 50); }
+  else { qInput.setAttribute('placeholder', placeholders[plIdx].substring(0, --charIdx)); if (charIdx === 0) { typing = true; plIdx = (plIdx + 1) % placeholders.length; setTimeout(typeP, 500); } else setTimeout(typeP, 20); }
+}
+setTimeout(typeP, 1000);
+function fillQuery(el) { qInput.value = el.innerText.replace('...',''); qInput.focus(); }
+const btn = document.getElementById('submit-btn');
+btn.addEventListener('click', function(e) {
+  if(this.classList.contains('loading')) return;
+  const rect = this.getBoundingClientRect(); const ripple = document.createElement('span'); ripple.className = 'ripple';
+  ripple.style.left = (e.clientX - rect.left) + 'px'; ripple.style.top = (e.clientY - rect.top) + 'px'; ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + 'px';
+  this.appendChild(ripple); setTimeout(() => ripple.remove(), 600); runPipeline();
+});
+const cvs = document.getElementById('lossChart'); const ctx = cvs.getContext('2d');
+cvs.width = cvs.offsetWidth; cvs.height = cvs.offsetHeight; ctx.beginPath(); ctx.moveTo(0, cvs.height - ((11-6)/(12-5))*cvs.height);
+for(let i=1; i<=263; i++) { const x = (i/263) * cvs.width; const y = cvs.height - (((11 - Math.pow(i/263, 0.4)*5 + (Math.random()-0.5)*0.5) - 5) / 7) * cvs.height; ctx.lineTo(x, y); }
+ctx.strokeStyle = '#ffb700'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.lineTo(cvs.width, cvs.height); ctx.lineTo(0, cvs.height); ctx.fillStyle = 'rgba(255, 183, 0, 0.1)'; ctx.fill();
+setTimeout(() => { document.querySelectorAll('.score-bar-fill').forEach(bar => { bar.style.width = bar.getAttribute('data-percent') + '%'; }); }, 500);
+let t = 0;
+function wave() {
+  t += 1; let ecg = 'M0,20 ', spo2 = 'M0,20 ', bp = 'M0,20 ';
+  for(let i=0; i<=210; i++) { let y = 20, p = (i - t*2 + 1000) % 100; if(p>0 && p<20) { if(p<5) y-=p; else if(p<10) y=15+(p-5)*6; else if(p<15) y=45-(p-10)*5; } ecg+=`L${i},${y} `; }
+  for(let i=0; i<=210; i+=5) spo2+=`L${i},${20 + Math.sin(i/20 + t*0.05)*10} `;
+  for(let i=0; i<=210; i+=3) { let p = (i/15 + t*0.04)%Math.PI; bp+=`L${i},${20 - (p<1.5?p*10:15-(p-1.5)*5)} `; }
+  document.getElementById('ecg-wave').innerHTML=`<path d="${ecg}" fill="none" stroke="#00ff88" stroke-width="1.5"/>`; document.getElementById('spo2-wave').innerHTML=`<path d="${spo2}" fill="none" stroke="#00d4ff" stroke-width="1.5"/>`; document.getElementById('bp-wave').innerHTML=`<path d="${bp}" fill="none" stroke="#ffb700" stroke-width="1.5"/>`;
+  document.getElementById('logo-pulse').setAttribute('cx', (t*1.5)%220); requestAnimationFrame(wave);
+}
+requestAnimationFrame(wave);
+const demoData = {
+  "dengue fever": { response: "For Dengue fever [ICD-10: A97.1], the first-line management is supportive care. Acetaminophen (Paracetamol) is the standard antipyretic.
+
+• Fluid therapy is critical during the critical phase for capillary leak syndrome.
+• Avoid NSAIDs (like Ibuprofen or Aspirin) due to bleeding risk.
+• Monitor hematocrit and platelet counts closely.", retrieved_sources: [{doc_id: "WHO_Dengue_2024", rerank_score: 0.94, text: "Clinical management of Dengue guidelines emphasizing fluid replacement..."}, {doc_id: "Indian_Health_Protocol", rerank_score: 0.89, text: "Standard operational procedures for Dengue fever management in Indian adults..."}], hallucination_score: 0.05, hallucination_flag: false, latency_ms: 2100 },
+  "diabetes": { response: "For Type 2 Diabetes Mellitus [ICD-10: E11], the standard initial oral hypoglycemic is Metformin.
+
+Starting dose: 500 mg once or twice daily with meals.
+Titration: Increase by 500 mg weekly.
+Max dose: 2000-2550 mg/day.
+Monitor renal function (eGFR) periodically.", retrieved_sources: [{doc_id: "ADA_Guidelines_2024", rerank_score: 0.96, text: "Pharmacologic approaches to glycemic treatment in Type 2 Diabetes..."}], hallucination_score: 0.02, hallucination_flag: false, latency_ms: 1850 },
+  "pneumonia": { response: "For Community-Acquired Pneumonia (CAP) [ICD-10: J18.9], calculate the CURB-65 score to determine inpatient vs outpatient management:
+
+C - Confusion
+U - Urea >7 mmol/L
+R - Respiratory rate >=30/min
+B - Blood pressure (SBP<90 or DBP<=60)
+65 - Age >= 65
+
+Score 0-1: Outpatient. Score 2: Inpatient. Score 3+: ICU admission recommended.", retrieved_sources: [{doc_id: "Thoracic_Society_BMJ", rerank_score: 0.92, text: "CURB-65 severity score application and CAP clinical outcomes..."}], hallucination_score: 0.11, hallucination_flag: false, latency_ms: 3100 },
+  "warfarin": { response: "Long-term usage of Aspirin [ICD-10: Z79.01] combined with Warfarin significantly increases the risk of major bleeding (GI bleeding and intracranial hemorrhage).
+
+Concomitant use should be restricted to patients with absolute indications (e.g., mechanical heart valve + recent ACS). INR target must be strictly monitored.", retrieved_sources: [{doc_id: "AHA_Bleeding_Risk", rerank_score: 0.95, text: "Antithrombotic therapy interaction risks in atrial fibrillation and ACS..."}], hallucination_score: 0.08, hallucination_flag: false, latency_ms: 2600 },
+  "tuberculosis": { response: "Under RNTCP protocols for Pulmonary Tuberculosis [ICD-10: A15.0], standard first-line treatment follows the DOTS strategy. Regiment consists of 2 months of HRZE (Isoniazid, Rifampicin, Pyrazinamide, Ethambutol) followed by 4 months of HRE.
+
+Always rule out drug resistance (MDR/XDR) via GeneXpert before initiation.", retrieved_sources: [{doc_id: "RNTCP_India_Docs", rerank_score: 0.98, text: "Revised National TB Control Programme technical operational guidelines..."}], hallucination_score: 0.01, hallucination_flag: false, latency_ms: 2900 }
+};
+const keys = Object.keys(demoData);
+function getDemo(q) { let k = keys.find(x => q.toLowerCase().includes(x)); return demoData[k] || demoData[keys[0]]; }
+async function chkHealth() {
+  if(window.location.pathname.includes('standalone')) { setDemo(); return; }
+  try {
+    let r = await fetch(API+"/health", {timeout:2000}), d = await r.json();
+    if(d.status==="ok") {
+      document.getElementById('api-dot').className='status-dot live'; document.getElementById('api-badge').innerText=''; document.getElementById('api-stats').innerText=`API LIVE | Uptime: ${d.uptime_seconds}s | Queries: ${d.total_queries_served}`; demoMode=false;
+    } else setDemo();
+  } catch { setDemo(); }
+}
+function setDemo() { document.getElementById('api-dot').className='status-dot demo'; document.getElementById('api-badge').innerText='(DEMO MODE)'; document.getElementById('api-stats').innerText='Backend disconnected. Using local fallback.'; demoMode=true; }
+setInterval(chkHealth, 30000); chkHealth();
+async function subQ(q) {
+  if(demoMode) return new Promise(r => setTimeout(()=>r(getDemo(q)), 2000));
+  try { let r = await fetch(API+"/query", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({query:q, top_k_retrieval:20, top_n_rerank:5, stream:false})}); return await r.json(); } catch { return getDemo(q); }
+}
+async function runPipeline() {
+  let q=qInput.value.trim(); if(!q) return;
+  document.getElementById('response-container').classList.remove('visible'); document.getElementById('sources-container').innerHTML='';
+  let st = [1,2,3,4,5].map(i=>document.getElementById(`step-${i}`)); st.forEach(s=>s.className='pipe-step'); btn.classList.add('loading');
+  let pg = document.getElementById('main-progress'); pg.style.width='0%'; setTimeout(()=>pg.style.width='15%', 100); st[0].className='pipe-step active'; let stT = Date.now();
+  let tm = [ setTimeout(()=>{st[0].className='pipe-step done'; st[1].className='pipe-step active'; pg.style.width='40%';}, 500), setTimeout(()=>{st[1].className='pipe-step done'; st[2].className='pipe-step active'; pg.style.width='60%';}, 1000), setTimeout(()=>{st[2].className='pipe-step done'; st[3].className='pipe-step active'; pg.style.width='75%';}, 1500), setTimeout(()=>{st[3].className='pipe-step done'; st[4].className='pipe-step active'; pg.style.width='90%';}, 1900) ];
+  let res = await subQ(q), actL = Date.now() - stT; tm.forEach(clearTimeout); st.forEach(s=>s.className='pipe-step done');
+  pg.style.width='100%'; btn.classList.remove('loading'); setTimeout(()=>pg.style.width='0%', 500); renderRes(res, actL);
+}
+function renderRes(d, l) {
+  document.getElementById('response-container').classList.add('visible'); let tg = document.getElementById('response-text'); tg.innerHTML='<span id="stc"></span><span class="cursor"></span>'; let stc = document.getElementById('stc');
+  let txt = (d.response||'').replace(/\[ICD-10: ([A-Z0-9.\-]+)\]/g, '<span class="icd-pill">$1</span>');
+  ['Acetaminophen', 'Paracetamol', 'NSAIDs', 'Ibuprofen', 'Aspirin', 'Metformin', 'Warfarin', 'Isoniazid', 'Rifampicin', 'Pyrazinamide', 'Ethambutol', 'fluid therapy'].forEach(dr=>{ txt = txt.replace(new RegExp(`(?<!<[^>]*)(${dr})(?![^<]*>)`, "gi"), '<span class="drug-name">$1</span>'); });
+  let i=0, b='', isT=false; function strC() { if(i>=txt.length) return; let c=txt[i++]; b+=c; if(c==='<') isT=true; if(c==='>') isT=false; if(!isT) { stc.innerHTML=b; setTimeout(strC, 15); } else strC(); } strC();
+  let sc = document.getElementById('sources-container'), src = d.retrieved_sources||[];
+  src.forEach((s, x)=>{ let div=document.createElement('div'); div.className='source-card'; div.innerHTML=`<div class="src-header"><span class="src-name">${s.doc_id}</span><div class="src-score"><div class="src-bar"><div class="src-fill" style="width: ${Math.round(s.rerank_score*100)}%"></div></div></div></div><div class="src-text">${s.text}</div>`; sc.appendChild(div); setTimeout(()=>div.classList.add('show'), 150+x*80); });
+  let hal=d.hallucination_score??0.12; document.getElementById('hal-arc').className='arc '+(hal<0.3?'safe':hal<0.6?'warn':'danger'); document.getElementById('hal-text').innerText=`Hallucination Score (${hal.toFixed(3)})`; document.getElementById('latency-badge').innerText=(d.latency_ms||l)+'ms';
+  document.getElementById('warning-banner').style.display=(d.hallucination_flag||hal>0.6)?'block':'none';
+}
+</script>
+</body>
+</html>

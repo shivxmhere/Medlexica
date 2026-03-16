@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import time
 import json
@@ -120,3 +121,8 @@ async def get_metrics():
         total_queries=total_queries,
         hallucination_rate_last_100=round(hall_rate, 4)
     )
+
+@app.get("/", response_class=HTMLResponse)
+async def dashboard():
+    with open("demo/medlexica_ui.html", encoding="utf-8") as f:
+        return f.read()
