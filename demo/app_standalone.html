@@ -121,6 +121,65 @@ textarea::placeholder{color:var(--text3)}
 .wandb-btn{width:100%;padding:10px;margin-top:12px;border:1px solid rgba(255,183,0,0.3);background:rgba(255,183,0,0.08);color:var(--amber);font:12px var(--mono);border-radius:8px;cursor:pointer;text-align:center;transition:background .2s}
 .wandb-btn:hover{background:rgba(255,183,0,0.15)}
 .badge{font:10px var(--mono);color:var(--text3);background:var(--surface2);padding:2px 8px;border-radius:4px;margin-left:8px}
+/* MOBILE TAB BAR */
+.mobile-tabs{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--surface);border-top:1px solid var(--border);z-index:100;justify-content:space-around;align-items:center;padding:0 8px}
+.mobile-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:none;background:none;color:var(--text3);font:10px var(--mono);cursor:pointer;transition:color .2s;border-radius:8px}
+.mobile-tab.active{color:var(--cyan);background:rgba(0,212,255,0.08)}
+.mobile-tab svg{width:20px;height:20px;fill:currentColor}
+/* ─── MOBILE RESPONSIVE ─── */
+@media(max-width:900px){
+html,body{overflow:auto}
+.header{height:auto;min-height:50px;flex-wrap:wrap;padding:10px 14px;gap:8px}
+.header-left{flex-direction:row;align-items:center;gap:10px}
+.logo{font-size:20px}
+.ecg-line svg{width:80px;height:14px}
+.header-center{display:none}
+.header-right{gap:8px;flex-wrap:wrap}
+.model-pill{padding:2px 8px;font-size:10px}
+.demo-label{font-size:10px}
+.header-link{font-size:10px}
+.layout{flex-direction:column;height:auto;min-height:calc(100vh - 50px);padding-bottom:60px}
+.col-left,.col-right{width:100%;min-width:0;border:none;overflow:visible}
+.col-center{padding:14px}
+.col-left{display:none;padding:14px}
+.col-right{display:none;padding:14px}
+.col-left.mob-active,.col-right.mob-active,.col-center.mob-active{display:block}
+.mobile-tabs{display:flex}
+textarea{min-height:80px;font-size:13px;padding:10px}
+.pills{gap:6px}
+.pill{font-size:11px;padding:5px 10px}
+.submit-btn{height:44px;font-size:13px}
+.response-card{padding:14px;min-height:150px}
+.response-text{font-size:13px;line-height:1.6}
+.response-empty{padding:30px 14px;font-size:12px}
+.metrics-bar{gap:8px}
+.metric-chip{font-size:10px;padding:3px 8px}
+.score-row{gap:6px;padding:8px 0;flex-wrap:wrap}
+.score-name{width:90px;font-size:11px}
+.score-base{width:48px;font-size:10px}
+.score-val{width:48px;font-size:11px}
+.score-delta{width:55px;font-size:10px}
+.vital-card{padding:10px}
+.vital-value{font-size:20px}
+.vital-canvas{height:40px}
+.pipeline-step{padding:6px 0}
+.step-name{font-size:12px}
+.info-row{font-size:11px}
+.source-card{padding:10px}
+.source-preview{font-size:11px}
+.loss-chart{height:120px}
+.section-title{font-size:10px;margin-bottom:8px}
+.api-bar{padding:8px 12px;margin-bottom:14px}
+.api-bar span{font-size:11px}
+.disclaimer{font-size:10px;padding:8px}
+.scorecard{margin-top:16px}
+.train-row{font-size:11px}
+}
+@media(max-width:400px){
+.header-right .header-link{display:none}
+.score-base{display:none}
+.score-name{width:80px;font-size:10px}
+}
 </style>
 </head>
 <body>
@@ -204,6 +263,21 @@ textarea::placeholder{color:var(--text3)}
 <div class="train-row"><span>Final Loss</span><span>5.65</span></div>
 <button class="wandb-btn" onclick="window.open('https://wandb.ai/shivuladuushivam-/medlexica-hackathon','_blank')">📊 View W&B Dashboard</button>
 </div>
+</div>
+<!-- MOBILE TAB BAR -->
+<div class="mobile-tabs" id="mobileTabs">
+<button class="mobile-tab active" data-tab="center" onclick="switchTab('center')">
+<svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/><path d="M7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/></svg>
+Query
+</button>
+<button class="mobile-tab" data-tab="left" onclick="switchTab('left')">
+<svg viewBox="0 0 24 24"><path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/></svg>
+Vitals
+</button>
+<button class="mobile-tab" data-tab="right" onclick="switchTab('right')">
+<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/><path d="M7 12h2v5H7zm4-3h2v8h-2zm4-3h2v11h-2z"/></svg>
+Sources
+</button>
 </div>
 <script>
 // ─── DEMO RESPONSES ────────────────────────────────────
@@ -364,6 +438,24 @@ const phs=["First-line treatment for dengue fever with warning signs?","Standard
 let pi=0;const ta=document.getElementById('queryInput');
 setInterval(()=>{if(document.activeElement===ta&&ta.value)return;pi=(pi+1)%phs.length;ta.placeholder=phs[pi];},3000);
 })();
+
+// ─── MOBILE TAB SWITCHING ─────────────────────────────
+function switchTab(tab){
+const left=document.querySelector('.col-left');
+const center=document.querySelector('.col-center');
+const right=document.querySelector('.col-right');
+left.classList.remove('mob-active');
+center.classList.remove('mob-active');
+right.classList.remove('mob-active');
+if(tab==='left')left.classList.add('mob-active');
+else if(tab==='right')right.classList.add('mob-active');
+else center.classList.add('mob-active');
+document.querySelectorAll('.mobile-tab').forEach(t=>{
+t.classList.toggle('active',t.dataset.tab===tab);
+});
+}
+// Set default mobile tab
+if(window.innerWidth<=900){document.querySelector('.col-center').classList.add('mob-active');}
 </script>
 </body>
 </html>
