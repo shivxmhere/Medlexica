@@ -124,5 +124,13 @@ async def get_metrics():
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
-    with open("demo/medlexica_ui.html", encoding="utf-8") as f:
-        return f.read()
+    import os
+    html_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "demo", "app_standalone.html"
+    )
+    try:
+        with open(html_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return "<h1>MedLexica is running</h1>"

@@ -1,0 +1,14 @@
+checkpoints/
+data/raw/
+data/processed/
+*.bin
+*.safetensors
+*.gguf
+*.pt
+*.pth
+wandb/
+*.log
+__pycache__/
+.env
+node_modules/
+.git/

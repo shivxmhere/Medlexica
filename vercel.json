@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "name": "medlexica",
+  "builds": [
+    {
+      "src": "api/main.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
+    },
+    {
+      "src": "demo/app_standalone.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/main.py"
+    },
+    {
+      "src": "/health",
+      "dest": "api/main.py"
+    },
+    {
+      "src": "/query",
+      "dest": "api/main.py"
+    },
+    {
+      "src": "/metrics",
+      "dest": "api/main.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "demo/app_standalone.html"
+    }
+  ],
+  "env": {
+    "PYTHONPATH": "."
+  }
+}
